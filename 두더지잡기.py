@@ -6,8 +6,9 @@ import time
 
 pygame.init()
 
-
-screen = pygame.display.set_mode((600, 400))
+screen_width = 600
+screen_height = 400
+screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("두더지")
 clock = pygame.time.Clock()
 FPS = 60
@@ -18,7 +19,11 @@ FPS = 60
 # 시간
 start_time = pygame.time.get_ticks()
 last_change_time = start_time
-game_duration = 60000
+game_time = 91000
+# 두더지 속도
+mole_speed = 1000
+# 다음 속도 증가 점수
+score_step = 5
 # 클릭 무시 시간
 click_block_time = 0
 
@@ -51,11 +56,21 @@ for row in range(3):
         x = col * hole_size + 50
         y = row * hole_size + 50
         holes.append(pygame.Rect(x, y, hole_size - 20, hole_size - 20))
+# 체력 변수
+max_hp = 10
+hp = max_hp
+
+# 두더지 이미지
+mole_image = pygame.image.load("두더지잡기 이미지/mole_image_2.png")
+mole_image = pygame.transform.scale(mole_image, (hole_size - 25, hole_size - 25))
+# 체력 게이지 이미지
+hp_image = pygame.image.load("두더지잡기 이미지/heart_image_2.png")
+hp_image = pygame.transform.scale(hp_image, (25, 25))
 
 # 랜덤 위치에 두더지 생성
 mole_index = random.randint(0, len(holes) - 1)
+# 두더지 클릭 여부
 mole_click = False
-
 # 게임 상태
 game_over = False
 # 로비 상태
@@ -83,8 +98,15 @@ def Lobby_Background():
 def Mole_Image():
     # 두더지 생성
     mole_hole = holes[mole_index]
-    mole_pos = mole_hole.center
-    pygame.draw.circle(screen, (85, 56, 48), mole_pos, hole_size // 3)
+    mole_rect = mole_image.get_rect(center=mole_hole.center)
+    screen.blit(mole_image, mole_rect)
+
+def Hp_Bar():
+    # 체력 게이지 생성
+    for i in range(hp):
+        x = 20 + i*30   # 간격조절
+        y = screen_height - 40
+        screen.blit(hp_image, (x, y))
 
 def Mole_Click_Success():
     global mole_click, message, message_time, mole_index, last_change_time, score
@@ -98,8 +120,9 @@ def Mole_Click_Success():
     mole_click = False
 
 def Mole_Click_Miss():
-    global mole_click, last_change_time, mole_index, message, message_time
+    global mole_click, last_change_time, mole_index, message, message_time, hp
     # 엉뚱한 곳 클릭으로 인한 놓침
+    hp -= 1
     message = "놓쳤다!"
     message_time = time.time()
     mole_index = random.randint(0, len(holes) - 1)
@@ -107,10 +130,11 @@ def Mole_Click_Miss():
     mole_click = False
 
 def Timeover_and_UpdateMolePosition():
-    global current_time, last_change_time, mole_click, mole_index, miss_mole, message, message_time
+    global current_time, last_change_time, mole_click, mole_index, miss_mole, message, message_time, hp
     # 시간초과로 인한 놓침 and 두더지 위치 업데이트
-    if current_time - last_change_time >= 1000:
-            if mole_click == False:  
+    if current_time - last_change_time >= mole_speed:
+            if mole_click == False: 
+                hp -= 1 
                 miss_mole += 1
                 message = "놓쳤다!"
                 message_time = time.time()
@@ -118,6 +142,13 @@ def Timeover_and_UpdateMolePosition():
             last_change_time = current_time
             mole_click = False
 
+def Mole_Speed_Up():
+    global mole_speed, score_step
+    # 두더지 속도 증가
+    if score >= score_step:
+        mole_speed = max(mole_speed - 50, 350)
+        score_step += 5
+            
 def Catch_Text():
     # 잡았다! 표시
     text = catch_font.render(message, True, (255, 255, 255))
@@ -132,7 +163,7 @@ def Miss_Text():
 
 def Ingame_Text():
     # 남은 시간 표시
-    remain_time = max(0, game_duration - (current_time - start_time)) // 1000
+    remain_time = max(0, game_time - (current_time - start_time)) // 1000
     timer_text = other_font.render(f"남은 시간: {remain_time}초", True, (255, 255, 255))
     text_rect_3 = timer_text.get_rect(center=(447.5, 60))
     screen.blit(timer_text, text_rect_3)
@@ -187,19 +218,23 @@ while running:
 
     # 초록색으로 화면 채우기
     screen.fill((167, 183, 91))
+    # 두더지 속도 증가
+    Mole_Speed_Up()
 
     if game_start == False:
         # 로비창 만들기
         Lobby_Background()
     elif game_over == False:
         # 60초가 지날 시 게임종료
-        if current_time - start_time >= game_duration:
+        if current_time - start_time >= game_time:
             game_over = True
         # 구멍 생성
         for hole in holes:
             pygame.draw.rect(screen, (50, 150, 50), hole)
         # 두더지 생성
         Mole_Image()
+        # 체력 게이지 이미지
+        Hp_Bar()
         # 잡았다! or 놓쳤다! 표시(0.5초)
         if time.time() - message_time < 0.5:
             if message == "잡았다!":
@@ -210,6 +245,10 @@ while running:
         Ingame_Text()
     # 게임 끝났을 때 텍스트 출력
     else:
+        Finish_Game_Text()
+    # 체력 모두 소진
+    if hp<0:
+        game_over = True
         Finish_Game_Text()
 
     pygame.display.flip()
