@@ -2,6 +2,7 @@ import pygame
 import sys
 import random
 import time
+import os
 
 
 pygame.init()
@@ -60,11 +61,15 @@ for row in range(3):
 max_hp = 10
 hp = max_hp
 
+# 이미지 경로 설정    이거 이해 못해서 그냥 챗지피티한테 물어봄. 나중에 봐야될듯
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+mole_path = os.path.join(BASE_DIR, "assets", "images", "mole.png")
+heart_path = os.path.join(BASE_DIR, "assets", "images", "heart.png")
 # 두더지 이미지
-mole_image = pygame.image.load("assets/images/mole.png")
+mole_image = pygame.image.load(mole_path)
 mole_image = pygame.transform.scale(mole_image, (hole_size - 25, hole_size - 25))
 # 체력 게이지 이미지
-hp_image = pygame.image.load("assets/images/heart.png")
+hp_image = pygame.image.load(heart_path)
 hp_image = pygame.transform.scale(hp_image, (25, 25))
 
 # 랜덤 위치에 두더지 생성
