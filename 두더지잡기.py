@@ -61,10 +61,10 @@ max_hp = 10
 hp = max_hp
 
 # 두더지 이미지
-mole_image = pygame.image.load("두더지잡기 이미지/mole_image_2.png")
+mole_image = pygame.image.load("assets/images/mole.png")
 mole_image = pygame.transform.scale(mole_image, (hole_size - 25, hole_size - 25))
 # 체력 게이지 이미지
-hp_image = pygame.image.load("두더지잡기 이미지/heart_image_2.png")
+hp_image = pygame.image.load("assets/images/heart.png")
 hp_image = pygame.transform.scale(hp_image, (25, 25))
 
 # 랜덤 위치에 두더지 생성
